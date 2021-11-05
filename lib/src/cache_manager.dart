@@ -89,8 +89,7 @@ class FirebaseImageCacheManager {
       whereArgs: [uri],
     );
     if (maps.isNotEmpty) {
-      FirebaseImageObject returnObject =
-          FirebaseImageObject.fromMap(maps.first);
+      FirebaseImageObject returnObject = FirebaseImageObject.fromMap(maps.first);
       returnObject.reference = getImageRef(returnObject, image.firebaseApp);
       if (CacheRefreshStrategy.BY_METADATA_DATE == cacheRefreshStrategy) {
         checkForUpdate(returnObject, image); // Check for update in background
@@ -101,17 +100,12 @@ class FirebaseImageCacheManager {
   }
 
   Reference getImageRef(FirebaseImageObject object, FirebaseApp? firebaseApp) {
-    FirebaseStorage storage =
-        FirebaseStorage.instanceFor(app: firebaseApp, bucket: object.bucket);
+    FirebaseStorage storage = FirebaseStorage.instanceFor(app: firebaseApp, bucket: object.bucket);
     return storage.ref().child(object.remotePath);
   }
 
-  Future<void> checkForUpdate(
-      FirebaseImageObject object, FirebaseImage image) async {
-    int remoteVersion = (await object.reference.getMetadata())
-            .updated
-            ?.millisecondsSinceEpoch ??
-        -1;
+  Future<void> checkForUpdate(FirebaseImageObject object, FirebaseImage image) async {
+    int remoteVersion = (await object.reference!.getMetadata()).updated?.millisecondsSinceEpoch ?? -1;
     if (remoteVersion != object.version) {
       // If true, download new image for next load
       await upsertRemoteFileToCache(object, image.maxSizeBytes);
@@ -140,26 +134,20 @@ class FirebaseImageCacheManager {
     return null;
   }
 
-  Future<Uint8List?> remoteFileBytes(
-      FirebaseImageObject object, int maxSizeBytes) {
-    return object.reference.getData(maxSizeBytes);
+  Future<Uint8List?> remoteFileBytes(FirebaseImageObject object, int maxSizeBytes) {
+    return object.reference!.getData(maxSizeBytes);
   }
 
-  Future<Uint8List?> upsertRemoteFileToCache(
-      FirebaseImageObject object, int maxSizeBytes) async {
+  Future<Uint8List?> upsertRemoteFileToCache(FirebaseImageObject object, int maxSizeBytes) async {
     if (CacheRefreshStrategy.BY_METADATA_DATE == cacheRefreshStrategy) {
-      object.version = (await object.reference.getMetadata())
-              .updated
-              ?.millisecondsSinceEpoch ??
-          0;
+      object.version = (await object.reference!.getMetadata()).updated?.millisecondsSinceEpoch ?? 0;
     }
     Uint8List? bytes = await remoteFileBytes(object, maxSizeBytes);
     await putFile(object, bytes);
     return bytes;
   }
 
-  Future<FirebaseImageObject> putFile(
-      FirebaseImageObject object, final bytes) async {
+  Future<FirebaseImageObject> putFile(FirebaseImageObject object, final bytes) async {
     String path = basePath + "/" + object.remotePath;
     path = path.replaceAll("//", "/");
     //print(join(basePath, object.remotePath)); Join isn't working?
